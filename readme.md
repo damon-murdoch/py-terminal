@@ -6,7 +6,7 @@
 Python Terminal Emulator for Wangan Midnight Maximum Tune 5/5DX+
 
 ### Version
-Thye latest revision for this software is 1.0.
+The latest revision for this software is 1.0.
 
 ### Language
 Python
