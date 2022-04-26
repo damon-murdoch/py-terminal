@@ -1,17 +1,61 @@
+## Builtin Imports
+
 # Python socket library
 import socket
 
 # Python struct library
 import struct
 
-# Python system library
-import sys
+# Python time library
+import time
+
+## Local Imports
 
 # Configuration file
 import config
 
+# Data file
+import data
+
+# spam_socket(sock: Socket, data: List, target: Tuple): Void
+# Given a socket, starts an infinite loop sending the data
+# on the given socket to the multi cast group provided.
+def spam_multicast(sock, data, target): 
+
+  # Sleep Timer (ms)
+  SLEEP = 8 * 0.001
+
+  # Infinite loop
+  while(True):
+
+    try:
+
+      # Loop over all of the byte sequences
+      for sequence in data:
+
+        # Send all of the event mode 4P Sequences
+        sock.sendto(bytes(sequence), target)
+
+      # Sleep for 'SLEEP' milliseconds
+      time.sleep(SLEEP)
+
+    except TimeoutError as e: # Warning
+
+      print("Timeout Warning: " + str(e))
+
+    except Exception as e: # Critical
+
+      # Pass to parent
+      raise e
+
 # Main loop
 def main():
+
+  # Request Timeout
+  TIMEOUT = 0.2
+
+  # Packet Time To Live (TTL)
+  TTL = 127
 
   # No idea what the 10,000 is for, just a placeholder
   multicast_group = (config.MULTICAST_ADDR,  config.PORT)
@@ -20,19 +64,16 @@ def main():
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
   # Socket timeout
-  sock.settimeout(config.TIMEOUT)
+  sock.settimeout(TIMEOUT)
 
   # Set multicast time to live to the config setting
-  ttl = struct.pack('b', config.TTL)
+  ttl = struct.pack('b', TTL)
   sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
   # No idea what this is for, oops
   reuse = struct.pack('b', 1)
   sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, reuse) 
   sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, reuse)
-
-  # Server is running
-  running = True
 
   try:
 
@@ -44,28 +85,39 @@ def main():
 
         case 0: # No event mode
 
-          pass
+          # Spam the free play mode packets on the multicast port
+          spam_multicast(sock, data.terminalPackage_Free, multicast_group)
 
         case 1: # Event Mode 2P
 
-          pass
+          # Spam the event 2P mode packets on the multicast port
+          spam_multicast(sock, data.terminalPackage_Event2P, multicast_group)            
 
         case 2: # Event Mode 4P
 
-          pass
-
-    # sent = sock.sendto("", multicast_group)
-
-  except:
+          # Spam the event 4P mode packets on the multicast port
+          spam_multicast(sock, data.terminalPackage_Event4P, multicast_group)
     
-    pass
+    else: # Free play mode is disabled
 
-  finally:
+      # Spam the coin play mode packets on the multicast port
+      spam_multicast(sock, data.terminalPackage_Coin, multicast_group)
 
-    pass
+  except Exception as e: # Server crash
+
+    print("Server crashed: " + e)  
 
 # If we are running the file directly
 if __name__ == '__main__':
+
+  print("Terminal Started!")
+
+  print("Free Play: " + str(config.FREEPLAY))
+  print("Event Mode: " + str([
+    "Disabled", "2P MODE", "4P MODE"
+  ][config.EVENTMODE]))
+
+  print("Press Ctrl + C to exit.")
 
   # Call the main function
   main()
