@@ -9,6 +9,9 @@ import struct
 # Python time library
 import time
 
+# Operating System Library
+import os
+
 ## Local Imports
 
 # Configuration file
@@ -54,8 +57,11 @@ def main():
   # Request Timeout
   TIMEOUT = 0.2
 
+  # Reuse Config
+  REUSE = 1
+
   # Packet Time To Live (TTL)
-  TTL = 127
+  TTL = 255
 
   # No idea what the 10,000 is for, just a placeholder
   multicast_group = (config.MULTICAST_ADDR,  config.PORT)
@@ -67,33 +73,29 @@ def main():
   sock.settimeout(TIMEOUT)
 
   # Set multicast time to live to the config setting
-  ttl = struct.pack('b', TTL)
-  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+  # ttl = struct.pack('b', TTL)
+  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, TTL)
 
   # No idea what this is for, oops
-  reuse = struct.pack('b', 1)
-  sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, reuse) 
-  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, reuse)
+  sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, REUSE) 
+  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, REUSE)
 
   try:
 
     # If free play mode is enabled
     if config.FREEPLAY:
 
-      # Switch on event mode value
-      match config.EVENTMODE: 
+      if config.EVENTMODE == 0: # Free Play
 
-        case 0: # No event mode
+        # Spam the free play mode packets on the multicast port
+        spam_multicast(sock, data.terminalPackage_Free, multicast_group)
 
-          # Spam the free play mode packets on the multicast port
-          spam_multicast(sock, data.terminalPackage_Free, multicast_group)
-
-        case 1: # Event Mode 2P
+      elif config.EVENTMODE == 1: # Event Mode 2P
 
           # Spam the event 2P mode packets on the multicast port
           spam_multicast(sock, data.terminalPackage_Event2P, multicast_group)            
 
-        case 2: # Event Mode 4P
+      elif config.EVENTMODE == 2: # Event Mode 4P
 
           # Spam the event 4P mode packets on the multicast port
           spam_multicast(sock, data.terminalPackage_Event4P, multicast_group)
