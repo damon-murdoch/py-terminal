@@ -64,7 +64,7 @@ def main():
   TTL = 255
 
   # No idea what the 10,000 is for, just a placeholder
-  multicast_group = (config.MULTICAST_ADDR,  config.PORT)
+  multicast_group = (config.ADDR,  config.PORT)
 
   # Create the udp socket
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

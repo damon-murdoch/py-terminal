@@ -1,10 +1,7 @@
 #### NETWORK SETTINGS ####
 
 # Multicast IP Address
-MULTICAST_ADDR = "225.0.0.1"
-
-# Host IP Address
-HOST = "127.0.0.1"
+ADDR = "225.0.0.1"
 
 # Broadcast Port
 PORT = 50765
