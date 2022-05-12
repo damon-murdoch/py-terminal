@@ -3,14 +3,8 @@
 # Python socket library
 import socket
 
-# Python struct library
-import struct
-
 # Python time library
 import time
-
-# Operating System Library
-import os
 
 ## Local Imports
 
@@ -63,7 +57,7 @@ def main():
   # Packet Time To Live (TTL)
   TTL = 255
 
-  # No idea what the 10,000 is for, just a placeholder
+  # Address, port we are sending data to
   multicast_group = (config.ADDR,  config.PORT)
 
   # Create the udp socket
