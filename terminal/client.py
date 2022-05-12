@@ -2,83 +2,86 @@
 
 # Python socket library
 import socket
-from tempfile import TemporaryFile
+
+# Python struct library
+import struct
 
 # Python time library
 import time
+
+# Python system library
+import sys
 
 ## Local Imports
 
 # Configuration file
 import config
 
-def wait(sock):
+def wait_multicast(sock):
 
-    # Sleep Timer (ms)
-    SLEEP = 8 * 0.001
-
-    # Byte limit
+    # Number of bytes to recv
     RECV = 1024
 
-    # Keep running unless fatal error
+    # List of responses
+    messages = []
+
+    # Program is running
     running = True
 
-    # Keep going until unset
-    while running: 
+    # While program is running
+    while(running):
 
-        try:
+        print("Waiting ...")
 
-            # Recieve the content from the socket
-            message = sock.recvfrom(RECV)
+        # Get bytes, address from broadcast
+        data, addr = sock.recvfrom(RECV)
 
-            # Print the length of the recieved message
-            print("Recieved:" + len(message))
+        print("Recieved %s bytes from %s ..." % (len(data), addr))
 
-        except TimeoutError as e: # Timeout exception
+        messages.append([data, addr])
 
-            print("Warning: Timed out")
+    # Receive/respond loop
+    # while True:
 
-        except Exception as e: # Other error
+    # print(sys.stderr, '\nwaiting to receive message')
+    # data, address = sock.recvfrom(1024)
+    
+    # print(sys.stderr, 'received %s bytes from %s' % (len(data), address))
+    # print(sys.stderr, data)
 
-            print("Error: " + e)
-
-            # Disable the running
-            running = False
-
-        finally: # Do after regardless of error
-
-            # Sleep for 'SLEEP' milliseconds
-            time.sleep(SLEEP)
+    # print(sys.stderr, 'sending acknowledgement to', address)
+    # sock.sendto('ack', address)
 
 # Main loop
 def main():
-    
-    # Request Timeout
-    TIMEOUT = 0.2
 
-    # Address, port we are recieving data from
-    group = ('0.0.0.0',  config.PORT)
+    # Multicast group
+    group = config.ADDR
 
-    # Create the main socket
+    # Address to recieve on
+    address = ('', config.PORT)
+
+    # Create the udp socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    # Socket timeout
-    sock.settimeout(TIMEOUT)
+    # Bind the udp socket to the address
+    sock.bind(address)
 
-    # Bind to the multicast address
-    sock.bind(group)
+    # Tell the operating system to add the socket 
+    # to the multicast group on all interfaces.
+    group = socket.inet_aton(group)
+    mreq = struct.pack('4sL', group, socket.INADDR_ANY)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-    print("Checking for messages ...")
-
-    # Wait for requests on the socket
-    wait(sock)
+    # Wait for the multicast messages
+    wait_multicast(sock)
 
 # If we are running the file directly
 if __name__ == '__main__':
 
   print("Terminal Client Started!")
 
-  print("Recieving on " + ", ".join(('0.0.0.0',  str(config.PORT))) + ' ...')
+  print("Scanning on port " + str(config.PORT) + ' ...')
 
   print("Press Ctrl + C to exit.")
 
